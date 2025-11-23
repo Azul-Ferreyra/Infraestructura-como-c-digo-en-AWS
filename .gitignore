@@ -1,0 +1,18 @@
+# Terraform
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.backup
+*.tfvars
+*.tfvars.json
+*.plan
+
+# AWS / credenciales
+.aws/
+*.pem
+*.key
+*.log
+
+# Sistema / editores
+.DS_Store
+Thumbs.db
