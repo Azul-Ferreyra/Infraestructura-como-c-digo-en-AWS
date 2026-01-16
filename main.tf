@@ -15,6 +15,56 @@ resource "aws_vpc" "main_vpc" {
   enable_dns_hostnames = true
 }
 
+############# VPC ENDPOINTS (SSM) ################
+############# El servidor no tiene que salir a internet para ser administrado.
+
+# Security Group para los Endpoints de SSM
+resource "aws_security_group" "ssm_endpoints_sg" {
+  name        = "ssm-endpoints-sg"
+  description = "Permitir trafico HTTPS hacia los endpoints de SSM"
+  vpc_id      = aws_vpc.main_vpc.id
+
+  ingress {
+    from_port       = 443
+    to_port         = 443
+    protocol        = "tcp"
+    security_groups = [aws_security_group.nginx_sg.id, aws_security_group.wazuh_sg.id]
+  }
+
+  tags = { Name = "ssm-endpoints-sg" }
+}
+
+#Endpoint para el servicio SSM
+resource "aws_vpc_endpoint" "ssm" {
+  vpc_id              = aws_vpc.main_vpc.id
+  service_name        = "com.amazonaws.eu-north-1.ssm"
+  vpc_endpoint_type   = "Interface"
+  subnet_ids = [aws_subnet.public_subnet.id, aws_subnet.private_subnet.id]
+  security_group_ids  = [aws_security_group.ssm_endpoints_sg.id]
+  private_dns_enabled = true
+}
+
+#Endpoint para SSM Messages
+resource "aws_vpc_endpoint" "ssmmessages" {
+  vpc_id              = aws_vpc.main_vpc.id
+  service_name        = "com.amazonaws.eu-north-1.ssmmessages"
+  vpc_endpoint_type   = "Interface"
+  subnet_ids = [aws_subnet.public_subnet.id, aws_subnet.private_subnet.id]
+  security_group_ids  = [aws_security_group.ssm_endpoints_sg.id]
+  private_dns_enabled = true
+}
+
+# Endpoint para EC2 Messages
+resource "aws_vpc_endpoint" "ec2messages" {
+  vpc_id              = aws_vpc.main_vpc.id
+  service_name        = "com.amazonaws.eu-north-1.ec2messages"
+  vpc_endpoint_type   = "Interface"
+  subnet_ids = [aws_subnet.public_subnet.id, aws_subnet.private_subnet.id]
+  security_group_ids  = [aws_security_group.ssm_endpoints_sg.id]
+  private_dns_enabled = true
+}
+
+
 ############# SUBNETS ################
 resource "aws_subnet" "public_subnet" {
   vpc_id                  = aws_vpc.main_vpc.id
